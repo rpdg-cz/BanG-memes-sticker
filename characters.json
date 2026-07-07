@@ -1,0 +1,37 @@
+{
+    "role_meta": {
+        "tmr":    { "cn": "灯",   "color": "#77BBDD" },
+        "anon":   { "cn": "爱音",   "color": "#FF8899" },
+        "rana":   { "cn": "乐奈",   "color": "#77DD77" },
+        "soyo":   { "cn": "爽世",   "color": "#FFDD88" },
+        "taki":   { "cn": "立希",   "color": "#7777AA" },
+        "uika":   { "cn": "初华",   "color": "#BB9955" },
+        "mutsumi":{ "cn": "睦",     "color": "#779977" },
+        "umirin": { "cn": "海铃",   "color": "#335566" },
+        "nyamu":  { "cn": "喵梦",   "color": "#AA4477" },
+        "sakiko": { "cn": "祥子",   "color": "#7799CC" }
+    },
+    "font": "SSFangTangTi",
+    "characters": {
+        "tmr1":     { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 55,  "y": 130, "rotation": -5 },
+        "tmr2":     { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 245, "y": 145, "rotation": 2  },
+        "anon1":    { "arrangement": "vertical", "textBehind": false, "splitSide": true,  "x": 265, "y": 120, "rotation": -3 },
+        "anon2":    { "arrangement": "vertical", "textBehind": true,  "splitSide": true,  "x": 265, "y": 105, "rotation": -3 },
+        "rana1":    { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 265, "y": 125, "rotation": 5 },
+        "rana2":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 265, "y": 148, "rotation": 5  },
+        "soyo1":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 15, "y": 148, "rotation": -4  },
+        "soyo2":    { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 265, "y": 148, "rotation": 2  },
+        "taki1":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 25, "y": 95, "rotation": -10 },
+        "taki2":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 245, "y": 125, "rotation": 10  },
+        "uika1":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 25, "y": 155, "rotation": -10  },
+        "uika2":    { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 25, "y": 155, "rotation": -10  },
+        "mutsumi1": { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 25, "y": 150, "rotation": 0  },
+        "mutsumi2": { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 255, "y": 140, "rotation": 9  },
+        "umirin1":  { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 255, "y": 155, "rotation": -4 },
+        "umirin2":  { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 255, "y": 155, "rotation": 0  },
+        "nyamu1":   { "arrangement": "vertical", "textBehind": true,  "splitSide": false, "x": 235, "y": 135, "rotation": 10  },
+        "nyamu2":   { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 255, "y": 135, "rotation": 7  },
+        "sakiko1":  { "arrangement": "vertical", "textBehind": false, "splitSide": true,  "x": 28, "y": 125, "rotation": -2 },
+        "sakiko2":  { "arrangement": "vertical", "textBehind": true,  "splitSide": true, "x": 28, "y": 145, "rotation": 0  }
+    }
+}
