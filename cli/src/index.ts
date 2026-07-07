@@ -8,7 +8,7 @@ const REPO = resolve(__dirname, "..", "..");
 const SRC = join(REPO, "src");
 const OUTPUT = join(REPO, "output");
 const CONFIG = join(REPO, "characters.json");
-const FONT_PATH = join(REPO, "stickers-maker", "src", "fonts", "ShangShouFangTangTi.woff2");
+const FONT_PATH = join(REPO, "image-editor", "src", "fonts", "ShangShouFangTangTi.woff2");
 
 GlobalFonts.registerFromPath(FONT_PATH, "SSFangTangTi");
 
