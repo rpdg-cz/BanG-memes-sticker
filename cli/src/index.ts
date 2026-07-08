@@ -1,4 +1,4 @@
-import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
+﻿import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -8,7 +8,7 @@ const REPO = resolve(__dirname, "..", "..");
 const SRC = join(REPO, "src");
 const OUTPUT = join(REPO, "output");
 const CONFIG = join(REPO, "characters.json");
-const FONT_PATH = join(REPO, "image-editor", "src", "fonts", "ShangShouFangTangTi.woff2");
+const FONT_PATH = join(REPO, "stickers-maker", "src", "fonts", "ShangShouFangTangTi.woff2");
 
 GlobalFonts.registerFromPath(FONT_PATH, "SSFangTangTi");
 
@@ -17,10 +17,9 @@ const CANVAS_H = 256;
 const FONT_FAMILY = "SSFangTangTi, Microsoft YaHei, SimHei, sans-serif";
 const PAD = 20;
 const MAX_FONT = 40;
-const MIN_FONT = 8;
+const MIN_FONT = 25;
 const GAP_RATIO = 0.18;
 const STROKE_RATIO = 0.15;
-const COL_GAP_RATIO = 0.25;
 
 interface CharFeature {
   arrangement: string; textBehind: boolean; splitSide?: boolean;
@@ -30,7 +29,13 @@ interface Config {
   role_meta: Record<string, { cn: string; color: string }>;
   font: string; characters: Record<string, CharFeature>;
 }
-type Layout = { fontSize: number; step: number; colGap: number; columns: string[][] };
+type Layout = {
+  fontSize: number;
+  charStep: number;        // vertical spacing between chars (font-based)
+  colStep: number;         // horizontal column advancement
+  colGap: number;          // horizontal gap between columns
+  columns: string[][];
+};
 
 const config: Config = JSON.parse(readFileSync(CONFIG, "utf-8"));
 const features = config.characters;
@@ -38,47 +43,52 @@ const COLORS: Record<string, string> = Object.fromEntries(
   Object.entries(config.role_meta).map(([k, v]) => [k, v.color])
 );
 
-// ── Layout: max 2 columns ─────────────────────────────────────────────────
-function calcLayout(ctx: any, text: string): Layout {
+// Reference colStep at 40px — only used for splitSide=true mode.
+const REF_COL_STEP = Math.round(MAX_FONT * (1 + GAP_RATIO));
+const MAX_COL_GAP = 5;
+
+// ---- Layout ---------------------------------------------------------------
+function calcLayout(ctx: any, text: string, splitSide: boolean): Layout {
   const maxH = CANVAS_H - PAD * 2;
-  const maxW = CANVAS_W - PAD * 2;
   const chars = Array.from(text);
   const total = chars.length;
+  const maxCols = splitSide ? 2 : 3;
 
   for (let fs = MAX_FONT; fs >= MIN_FONT; fs -= 2) {
-    const step = Math.round(fs * (1 + GAP_RATIO));
-    const colGap = Math.round(fs * COL_GAP_RATIO);
+    const charStep = Math.round(fs * (1 + GAP_RATIO));
+    // splitSide=true: REF colStep; splitSide=false: font-based colStep
+    const colStep = splitSide ? REF_COL_STEP : charStep;
     ctx.font = `bold ${fs}px ${FONT_FAMILY}`;
 
-    // Single column
-    if ((total - 1) * step <= maxH) {
-      return { fontSize: fs, step, colGap, columns: [chars] };
-    }
-    // Max 2 columns
-    const perCol = Math.floor(maxH / step);
-    if (perCol < 1) continue;
-    const numCols = Math.min(2, Math.ceil(total / perCol));
-    if (numCols * step + (numCols - 1) * colGap <= maxW) {
-      const cols: string[][] = [];
-      const n = Math.ceil(total / numCols);
-      for (let i = 0; i < total; i += n) cols.push(chars.slice(i, i + n));
-      return { fontSize: fs, step, colGap, columns: cols };
+    if ((total - 1) * charStep <= maxH) {
+      return { fontSize: fs, charStep, colStep, colGap: MAX_COL_GAP, columns: [chars] };
     }
   }
 
-  // Force 2 cols at min font
   const fs = MIN_FONT;
-  const step = Math.round(fs * (1 + GAP_RATIO));
-  const colGap = Math.round(fs * COL_GAP_RATIO);
-  const n = Math.ceil(total / 2);
-  const cols: string[][] = [];
-  for (let i = 0; i < total; i += n) cols.push(chars.slice(i, i + n));
+  const charStep = Math.round(fs * (1 + GAP_RATIO));
+  const colStep = splitSide ? REF_COL_STEP : charStep;
   ctx.font = `bold ${fs}px ${FONT_FAMILY}`;
-  return { fontSize: fs, step, colGap, columns: cols };
+
+  for (let numCols = 2; numCols <= maxCols; numCols++) {
+    const perCol = Math.ceil(total / numCols);
+    if ((perCol - 1) * charStep <= maxH) {
+      const cols: string[][] = [];
+      for (let i = 0; i < total; i += perCol) cols.push(chars.slice(i, i + perCol));
+      return { fontSize: fs, charStep, colStep, colGap: MAX_COL_GAP, columns: cols };
+    }
+  }
+
+  const perCol = Math.ceil(total / maxCols);
+  const cols: string[][] = [];
+  for (let i = 0; i < total; i += perCol) cols.push(chars.slice(i, i + perCol));
+  return { fontSize: fs, charStep, colStep, colGap: MAX_COL_GAP, columns: cols };
 }
 
-// ── Draw a single column centred at origin ────────────────────────────────
-function renderCol(ctx: any, col: string[], fontSize: number, step: number, color: string): void {
+// ---- Draw a single column centred at origin ------------------------------
+function renderCol(
+  ctx: any, col: string[], fontSize: number, charStep: number, color: string
+): void {
   ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
   ctx.lineWidth = Math.max(2, Math.round(fontSize * STROKE_RATIO));
   ctx.strokeStyle = "#ffffff";
@@ -86,18 +96,18 @@ function renderCol(ctx: any, col: string[], fontSize: number, step: number, colo
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const totalH = (col.length - 1) * step;
+  const totalH = (col.length - 1) * charStep;
   let charY = -totalH / 2;
   for (const ch of col) {
     ctx.strokeText(ch, 0, charY);
     ctx.fillText(ch, 0, charY);
-    charY += step;
+    charY += charStep;
   }
 }
 
-// ── Normal multi-column (left-anchored) ───────────────────────────────────
+// ---- Normal multi-column (left-anchored) ----------------------------------
 function renderText(ctx: any, layout: Layout, color: string): void {
-  const { fontSize, step, colGap, columns } = layout;
+  const { fontSize, charStep, colStep, colGap, columns } = layout;
   ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
   ctx.lineWidth = Math.max(2, Math.round(fontSize * STROKE_RATIO));
   ctx.strokeStyle = "#ffffff";
@@ -107,37 +117,41 @@ function renderText(ctx: any, layout: Layout, color: string): void {
 
   let colX = 0;
   for (const col of columns) {
-    const totalH = (col.length - 1) * step;
+    const totalH = (col.length - 1) * charStep;
     let charY = -totalH / 2;
     for (const ch of col) {
       ctx.strokeText(ch, colX, charY);
       ctx.fillText(ch, colX, charY);
-      charY += step;
+      charY += charStep;
     }
-    colX += step + colGap;
+    colX += colStep + colGap;
   }
 }
 
-// ── Render helper for a single text pass (handles splitSide) ─────────────
-function renderPass(ctx: any, layout: Layout, feat: CharFeature, cx: number, cy: number, color: string): void {
-  if (feat.splitSide && layout.columns.length === 2) {
-    // Col 0 at given coordinate with given rotation
+// ---- Render helper for a single text pass (handles splitSide) -------------
+function renderPass(
+  ctx: any, layout: Layout, feat: CharFeature,
+  cx: number, cy: number, color: string
+): void {
+  if (feat.splitSide && layout.columns.length > 1) {
+    const half = Math.ceil(layout.columns.length / 2);
+    const left = layout.columns.slice(0, half);
+    const right = layout.columns.slice(half);
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate((feat.rotation * Math.PI) / 180);
-    renderCol(ctx, layout.columns[0], layout.fontSize, layout.step, color);
+    renderText(ctx, { ...layout, columns: left }, color);
     ctx.restore();
 
-    // Col 1 at mirror position with opposite rotation
     const mx = CANVAS_W - cx;
     const my = CANVAS_H - cy;
     ctx.save();
     ctx.translate(mx, my);
     ctx.rotate((-feat.rotation * Math.PI) / 180);
-    renderCol(ctx, layout.columns[1], layout.fontSize, layout.step, color);
+    renderText(ctx, { ...layout, columns: right }, color);
     ctx.restore();
   } else {
-    // Normal left-anchored rendering
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate((feat.rotation * Math.PI) / 180);
@@ -146,12 +160,12 @@ function renderPass(ctx: any, layout: Layout, feat: CharFeature, cx: number, cy:
   }
 }
 
-// ── Process one /roleN text ───────────────────────────────────────────────
+// ---- Process one /roleN text ----------------------------------------------
 async function processInput(input: string): Promise<void> {
   const m = input.match(/^\/([a-z]+)(\d+)\s+(.+)$/);
   if (!m) throw new Error(`Invalid: "${input}"`);
   const role = m[1], idx = m[2], text = m[3];
-  if ([...text].length > 10) throw new Error(`Text too long: ${[...text].length} > 10`);
+  if ([...text].length > 20) throw new Error(`Text too long: ${[...text].length} > 20`);
 
   const key = `${role}${idx}`;
   const feat = features[key];
@@ -164,21 +178,21 @@ async function processInput(input: string): Promise<void> {
 
   const canvas = createCanvas(CANVAS_W, CANVAS_H);
   const ctx = canvas.getContext("2d");
-  const layout = calcLayout(ctx, text);
+  const layout = calcLayout(ctx, text, feat.splitSide ?? false);
 
-  // Clamp
   const maxColLen = Math.max(...layout.columns.map(c => c.length));
-  const blockH = (maxColLen - 1) * layout.step;
-  const halfStep = layout.step / 2;
+  const blockH = (maxColLen - 1) * layout.charStep;
+  const halfColStep = layout.colStep / 2;
   let cx = feat.x, cy = feat.y;
   const ox = cx, oy = cy;
-  const useSplit = feat.splitSide && layout.columns.length === 2;
+  const useSplit = feat.splitSide && layout.columns.length >= 2;
 
   if (useSplit) {
-    cx = Math.max(PAD + halfStep, Math.min(CANVAS_W - PAD - halfStep, cx));
+    cx = Math.max(PAD + halfColStep, Math.min(CANVAS_W - PAD - halfColStep, cx));
     cy = Math.max(PAD + blockH / 2, Math.min(CANVAS_H - PAD - blockH / 2, cy));
   } else {
-    cx = Math.max(PAD + halfStep, Math.min(CANVAS_W - PAD - halfStep - (layout.columns.length - 1) * (layout.step + layout.colGap), cx));
+    const totalWidth = (layout.columns.length - 1) * (layout.colStep + layout.colGap);
+    cx = Math.max(PAD + halfColStep, Math.min(CANVAS_W - PAD - halfColStep - totalWidth, cx));
     cy = Math.max(PAD + blockH / 2, Math.min(CANVAS_H - PAD - blockH / 2, cy));
   }
   if (cx !== ox || cy !== oy) {
@@ -202,7 +216,7 @@ async function processInput(input: string): Promise<void> {
   console.log(`\u2713 ${key}.png  ${meta.cn}  ${layout.fontSize}px${colInfo}`);
 }
 
-// ── Output helpers ─────────────────────────────────────────────────────────
+// ---- Output helpers -------------------------------------------------------
 function clearOutput(): void {
   if (existsSync(OUTPUT)) {
     for (const f of readdirSync(OUTPUT)) rmSync(join(OUTPUT, f));
