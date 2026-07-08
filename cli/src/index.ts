@@ -12,7 +12,6 @@ const FONT_PATH = join(REPO, "image-editor", "src", "fonts", "ShangShouFangTangT
 
 GlobalFonts.registerFromPath(FONT_PATH, "SSFangTangTi");
 
-const CANVAS_W = 296;
 // Reference canvas that characters.json coordinates are calibrated to.
 const REF_W = 296;
 const REF_H = 296;
