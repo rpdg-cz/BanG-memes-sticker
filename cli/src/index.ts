@@ -1,4 +1,4 @@
-﻿import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
+import { createCanvas, loadImage, GlobalFonts } from "@napi-rs/canvas";
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -13,7 +13,7 @@ const FONT_PATH = join(REPO, "image-editor", "src", "fonts", "ShangShouFangTangT
 GlobalFonts.registerFromPath(FONT_PATH, "SSFangTangTi");
 
 const CANVAS_W = 296;
-const CANVAS_H = 256;
+const CANVAS_H = 296;
 const FONT_FAMILY = "SSFangTangTi, Microsoft YaHei, SimHei, sans-serif";
 const PAD = 20;
 const MAX_FONT = 40;
@@ -43,7 +43,7 @@ const COLORS: Record<string, string> = Object.fromEntries(
   Object.entries(config.role_meta).map(([k, v]) => [k, v.color])
 );
 
-// Reference colStep at 40px — only used for splitSide=true mode.
+// Reference colStep at 40px �� only used for splitSide=true mode.
 const REF_COL_STEP = Math.round(MAX_FONT * (1 + GAP_RATIO));
 const MAX_COL_GAP = 5;
 
@@ -228,7 +228,6 @@ function clearOutput(): void {
 async function main(): Promise<void> {
   const raw = process.argv.slice(2);
   if (raw.length === 0) {
-    console.log("用法: node cli/dist/index.js /anon1 文本 /tmr2 文本 ...");
     process.exit(1);
   }
   const inputs: string[] = [];
