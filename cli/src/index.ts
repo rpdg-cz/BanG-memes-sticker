@@ -13,11 +13,22 @@ const FONT_PATH = join(REPO, "image-editor", "src", "fonts", "ShangShouFangTangT
 GlobalFonts.registerFromPath(FONT_PATH, "SSFangTangTi");
 
 const CANVAS_W = 296;
-const CANVAS_H = 296;
+// Reference canvas that characters.json coordinates are calibrated to.
+const REF_W = 296;
+const REF_H = 296;
+
+// Target canvas matching source image resolution (2048×2048).
+const CANVAS_W = 2048;
+const CANVAS_H = 2048;
+
+// Uniform scale factor: all dimensions and coordinates scale proportionally
+// around the canvas centre as the affine origin.
+const SCALE = CANVAS_W / REF_W;
+
 const FONT_FAMILY = "SSFangTangTi, Microsoft YaHei, SimHei, sans-serif";
-const PAD = 20;
-const MAX_FONT = 40;
-const MIN_FONT = 25;
+const PAD = Math.round(20 * SCALE);
+const MAX_FONT = Math.round(40 * SCALE);
+const MIN_FONT = Math.round(25 * SCALE);
 const GAP_RATIO = 0.18;
 const STROKE_RATIO = 0.15;
 
@@ -43,9 +54,15 @@ const COLORS: Record<string, string> = Object.fromEntries(
   Object.entries(config.role_meta).map(([k, v]) => [k, v.color])
 );
 
-// Reference colStep at 40px �� only used for splitSide=true mode.
+// Reference colStep at 40px -- only used for splitSide=true mode.
 const REF_COL_STEP = Math.round(MAX_FONT * (1 + GAP_RATIO));
-const MAX_COL_GAP = 5;
+const MAX_COL_GAP = Math.round(5 * SCALE);
+
+function scaleCoord(oldVal: number, refSize: number, newSize: number): number {
+  const oldCenter = refSize / 2;
+  const newCenter = newSize / 2;
+  return newCenter + (oldVal - oldCenter) * (newSize / refSize);
+}
 
 // ---- Layout ---------------------------------------------------------------
 function calcLayout(ctx: any, text: string, splitSide: boolean): Layout {
@@ -183,7 +200,8 @@ async function processInput(input: string): Promise<void> {
   const maxColLen = Math.max(...layout.columns.map(c => c.length));
   const blockH = (maxColLen - 1) * layout.charStep;
   const halfColStep = layout.colStep / 2;
-  let cx = feat.x, cy = feat.y;
+  let cx = scaleCoord(feat.x, REF_W, CANVAS_W);
+  let cy = scaleCoord(feat.y, REF_H, CANVAS_H);
   const ox = cx, oy = cy;
   const useSplit = feat.splitSide && layout.columns.length >= 2;
 
@@ -228,6 +246,7 @@ function clearOutput(): void {
 async function main(): Promise<void> {
   const raw = process.argv.slice(2);
   if (raw.length === 0) {
+    console.log("用法: node cli/dist/index.js /anon1 文本 /tmr2 文本 ...");
     process.exit(1);
   }
   const inputs: string[] = [];
