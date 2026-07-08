@@ -13,13 +13,13 @@ npm run build
 ### 使用
 
 ```bash
-node cli/dist/index.js /anon1 文本
+node cli/dist/index.js "/anon1 文本"
 ```
 
 输入格式：`/角色[序号] 文本`。角色使用小写英文名，序号从 1 开始。可一次传入多组：
 
 ```bash
-node cli/dist/index.js /anon1 你好 /tmr2 こんにちは /rana1 テスト
+node cli/dist/index.js "/anon1 你好" "/tmr2 こんにちは" "/rana1 テスト"
 ```
 
 生成图片输出到仓库根目录的 `output/`，每次运行前自动清空。
@@ -41,7 +41,7 @@ node cli/dist/index.js /anon1 你好 /tmr2 こんにちは /rana1 テスト
 
 ### 限制
 
-- 文本不超过 **10 个全角字符**，超出拒绝并报错。
+- 文本不超过 **20 个全角字符**，超出拒绝并报错。
 - 角色名和序号必须与 `src/` 下的素材文件对应。
 - 输出画布固定 **296×256** 像素。
 
