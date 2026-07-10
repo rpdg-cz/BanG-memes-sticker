@@ -1,0 +1,31 @@
+BanGDream Stickers Maker — 环境与依赖要求
+
+== 运行环境 ==
+* Node.js >= 20.0.0
+* npm >= 9.0.0
+* 操作系统：Windows / macOS / Linux
+
+== CLI 工具依赖（cli/） ==
+* @napi-rs/canvas ^0.1.65       图像渲染（基于 Skia）
+* typescript ^5.3.0              TypeScript 编译器（devDependency）
+* @types/node ^20.10.0           Node.js 类型声明（devDependency）
+
+== image-editor 依赖（image-editor/） ==
+* react ^18.2.0                  前端框架
+* react-dom ^18.2.0              React DOM 渲染
+* @mui/material ^5.18.0          Material UI 组件库
+* @mui/icons-material ^5.15.0    Material UI 图标
+* @emotion/react ^11.11.3        运行时 CSS-in-JS
+* @emotion/styled ^11.11.0       样式化组件
+* vite ^7.3.0                   开发服务器与构建工具（devDependency）
+* @vitejs/plugin-react-swc ^4.2.2 Vite React SWC 插件（devDependency）
+* eslint ^8.56.0                 代码规范检查（devDependency）
+* prettier ^3.1.1                代码格式化（devDependency）
+
+== 字体文件 ==
+* image-editor/src/fonts/ShangShouFangTangTi.woff2  上手方糖体（竖排文字渲染）
+
+== 安装步骤 ==
+cd cli && npm install
+cd ../image-editor && npm install
+cd ../stickers-maker && npm install   # 上游参考实现，可选

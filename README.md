@@ -1,71 +1,117 @@
-## stickers-cli
+# BanGDream Stickers Maker
 
-BanGDream 表情包制作命令行工具。基于 [stickers-maker](https://github.com/rpdg-cz/stickers-maker) 二次开发。
+基于 [stickers-maker](https://github.com/rpdg-cz/stickers-maker)（Project Sekai 贴纸生成器）二次开发的 BanGDream 表情包制作工具。
 
-### 安装
+输入 `/角色[序号] 文本`，将文本按预设字体特征填充到角色素材图片上，输出 PNG 图片。
+
+## 快速开始
 
 ```bash
-cd cli
-npm install
+# 安装依赖
+cd cli && npm install
+
+# 构建 CLI
 npm run build
+
+# 生成贴图
+node dist/index.js /anon1 你好世界
 ```
 
-### 使用
+输出图片位于项目根目录的 `output/` 文件夹。
+
+## 使用方式
 
 ```bash
-node cli/dist/index.js "/anon1 文本"
+# 单次生成
+node cli/dist/index.js /anon1 文本
+
+# 批量生成
+node cli/dist/index.js /tmr1 こんにちは /rana2 テスト
 ```
 
-输入格式：`/角色[序号] 文本`。角色使用小写英文名，序号从 1 开始。可一次传入多组：
+### 输入格式
+
+`/角色[序号] 文本`
+
+- 角色名：小写英文字母（`anon`, `tmr`, `soyo`, `taki`, `rana`, `uika`, `mutsumi`, `umirin`, `nyamu`, `sakiko`）
+- 序号：素材图片编号（1 或 2）
+- 文本：不超过 20 个全角字符
+
+### 示例
+
+| 命令 | 效果 |
+|---|---|
+| `/anon1 你好` | 将你好以 anon 的字体特征渲染到 anon1 素材上 |
+| `/tmr2 テスト` | 将テスト以 tmr 的字体特征渲染到 tmr2 素材上 |
+
+## 项目结构
+
+```
+stick/
+├── cli/                 命令行工具源码（TypeScript）
+│   ├── src/index.ts     渲染与 CLI 入口
+│   └── dist/            编译输出
+├── image-editor/        Web 前端调试工具（React + Vite + MUI）
+├── stickers-maker/      上游 Web 应用（参考实现）
+├── src/                 角色素材图片（按角色分目录）
+│   ├── anon/
+│   ├── tmr/
+│   └── ...
+├── characters/          角色字体特征描述文件（Markdown）
+├── characters.json      角色特征数据源（CLI 读取）
+├── output/              CLI 输出目录
+└── requirements.txt     环境与依赖说明
+```
+
+## 角色应援色
+
+| 角色 | 应援色 |
+|---|---|
+| `tmr` | `#77BBDD` |
+| `anon` | `#FF8899` |
+| `rana` | `#77DD77` |
+| `soyo` | `#FFDD88` |
+| `taki` | `#7777AA` |
+| `uika` | `#BB9955` |
+| `mutsumi` | `#779977` |
+| `umirin` | `#335566` |
+| `nyamu` | `#AA4477` |
+| `sakiko` | `#7799CC` |
+
+## Build & Test
 
 ```bash
-node cli/dist/index.js "/anon1 你好" "/tmr2 こんにちは" "/rana1 テスト"
+# 安装依赖
+cd cli && npm install
+
+# 编译 TypeScript
+npm run build
+
+# 运行 CLI
+node dist/index.js /anon1 测试文本
+
+# 启动 image-editor 开发服务器
+cd ../image-editor && npm install && npm run dev
 ```
 
-生成图片输出到仓库根目录的 `output/`，每次运行前自动清空。
+## 环境要求
 
-### 可用角色
+- Node.js >= 20
+- npm >= 9
 
-| 角色 | 标识符 | 应援色 |
-|------|--------|--------|
-| 灯(Tomori) | `tmr` | `#77BBDD` |
-| 愛音(Anon) | `anon` | `#FF8899` |
-| 楽奈(Rana) | `rana` | `#77DD77` |
-| 爽世(Soyo) | `soyo` | `#FFDD88` |
-| 立希(Taki) | `taki` | `#7777AA` |
-| 初華(Uika) | `uika` | `#BB9955` |
-| 睦(Mutsumi) | `mutsumi` | `#779977` |
-| 海鈴(Umirin) | `umirin` | `#335566` |
-| 若麦(Nyamu) | `nyamu` | `#AA4477` |
-| 祥子(Sakiko) | `sakiko` | `#7799CC` |
+详见 [requirements.txt](requirements.txt)。
 
-### 限制
+## Commit 规范
 
-- 文本不超过 **20 个全角字符**，超出拒绝并报错。
-- 角色名和序号必须与 `src/` 下的素材文件对应。
-- 输出画布固定 **2048×2048** 像素。
-- .json文件中的配置画布大小是 **296×296** 像素，在图像编辑的时候会等比例放大。
+遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
 
-### 项目结构
+| Scope | 含义 |
+|---|---|
+| `agent1` | 字体特征识别 |
+| `agent2` | CLI 工具开发 |
+| `chars` | 角色特征描述文件 |
+| `assets` | 素材图片变更 |
 
-```
-cli/
-├── src/index.ts    # TypeScript 源码
-├── dist/           # 编译输出（tsc）
-├── package.json
-└── tsconfig.json
-```
+## 许可
 
-### 技术栈
-
-- **TypeScript**（ES2022 / ESNext 模块）
-- **@napi-rs/canvas** — 基于 Skia 的 Node.js Canvas 实现，负责图片合成与文字渲染
-- 字体文件来自 `../stickers-maker/src/fonts/`
-
-### 构建
-
-```bash
-npm run build          # 等同于 npx tsc
-```
-
-`tsconfig.json` 将 `src/` 编译到 `dist/`，目标 ES2022，模块格式 ESNext。
+素材图片和角色特征文件纳入版本控制。`output/` 目录不纳入版本控制。
